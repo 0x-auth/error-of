@@ -1,1 +1,4 @@
 pdfminer.six  # only for examples/pdf2html; on Termux: pkg install python-cryptography first
+numpy        # pdf2html graphics layer
+pillow       # pdf2html graphics layer
+playwright   # optional: G1 through Chromium print; then: python3 -m playwright install chromium
