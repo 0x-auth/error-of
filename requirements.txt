@@ -1,0 +1,1 @@
+pdfminer.six  # only for examples/pdf2html; on Termux: pkg install python-cryptography first
