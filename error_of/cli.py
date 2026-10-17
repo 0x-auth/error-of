@@ -4,6 +4,8 @@
     error-of report <case-id>         print a stored case as Markdown
     error-of search <text>            find stored cases by class, boundary or text
     error-of patterns                 recurring signatures and classes
+    error-of walk <e1> <e2> ...       diagnose a walk from its signed errors
+                                      (two remembered errors per step, no history)
 """
 import json
 import os
@@ -11,6 +13,7 @@ import sys
 from collections import Counter
 
 from . import core
+from . import walk
 
 
 def cmd_run(argv, out_dir):
@@ -39,6 +42,8 @@ def cmd_run(argv, out_dir):
               file=sys.stderr)
     for h in case["inferences"]:
         print(f"[error-of]   {h['class']}: assumed '{h['assumption']}'", file=sys.stderr)
+    if case.get("side"):
+        print(f"[error-of]   side: {case['side']}", file=sys.stderr)
     print(f"[error-of] report: {md}", file=sys.stderr)
     return case["exit_code"]
 
@@ -79,6 +84,20 @@ def cmd_patterns():
     return 0
 
 
+def cmd_walk(values):
+    try:
+        errors = [float(v) for v in values]
+    except ValueError:
+        print("usage: error-of walk <signed error> <signed error> ...", file=sys.stderr)
+        return 2
+    w = walk.Walk()
+    last = None
+    for e in errors:
+        last = w.step(e)
+        print(walk.describe(last))
+    return 0 if last and last["state"] in ("arrived", "converging") else 1
+
+
 def main():
     a = sys.argv[1:]
     out_dir = os.environ.get("ERROR_OF_OUT", "output")
@@ -93,6 +112,8 @@ def main():
         return cmd_search(" ".join(a[1:]))
     if a[0] == "patterns":
         return cmd_patterns()
+    if a[0] == "walk" and len(a) > 1:
+        return cmd_walk(a[1:])
     print(__doc__)
     return 2
 

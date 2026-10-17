@@ -127,19 +127,41 @@ RULES = [
 ]
 
 
+# Which way the wall was hit, and which way to move. A boundary says where the
+# walk stopped; a side says what to do next. Classes without a side (Syntax,
+# Context, ...) are walls with no direction: the fix is to change the input,
+# not to move along an axis. Space and time trade against each other.
+SIDES = {
+    "Memory":    ("too big",    "trade time for space: recompute or keep only what the next step needs"),
+    "Storage":   ("too big",    "trade time for space: write less, compress, or stream"),
+    "Time":      ("too slow",   "trade space for time: store results instead of recomputing"),
+    "Precision": ("too coarse", "use a finer representation: the value needs more than the cell holds"),
+}
+
+
 def classify(stderr, stdout=""):
     text = stderr + "\n" + stdout
     hits = []
     for cls, pat, boundary, assumption, invariant, transforms in RULES:
         m = re.search(pat, text)
         if m:
+            side, trade = SIDES.get(cls, (None, None))
             hits.append({
                 "class": cls, "boundary": boundary, "assumption": assumption,
                 "invariant": invariant, "transformations": transforms,
+                "side": side, "trade": trade,
                 "evidence": text[max(0, m.start() - 60):m.end() + 60].strip(),
                 "rule": pat, "source": "pattern",
             })
     return hits
+
+
+def case_side(observations, inferences):
+    """The case's side: a program's own report first, then the first pattern that has one."""
+    for x in list(observations) + list(inferences):
+        if x.get("side"):
+            return x["side"]
+    return None
 
 
 def signature(stderr):
@@ -196,6 +218,7 @@ def build_case(cap):
         "signature": sig,
         "seen_before": len(prior),
     })
+    case["side"] = case_side(case["observations"], case["inferences"])
     return case
 
 
@@ -203,12 +226,13 @@ def to_markdown(c):
     L = [f"# error-of case {c['id']}", "",
          f"- command: `{' '.join(c['command'])}`",
          f"- exit code: {c['exit_code']}   runtime: {c['runtime_s']}s   status: **{c['status']}**",
-         f"- signature: {c['signature']}   seen before: {c['seen_before']}", ""]
+         f"- signature: {c['signature']}   seen before: {c['seen_before']}",
+         f"- side: {c.get('side') or 'none (a wall with no direction)'}", ""]
     if c["observations"]:
         L += ["## Observations (reported by the program itself)", ""]
         for i, o in enumerate(c["observations"], 1):
             L += [f"### {i}. {o.get('class', '?')}: {o.get('boundary', '')}", ""]
-            for k in ("observation", "assumption", "invariant", "transformation", "outcome"):
+            for k in ("observation", "assumption", "invariant", "transformation", "side", "error", "outcome"):
                 if o.get(k) is not None:
                     L.append(f"- **{k}:** {o[k]}")
             L.append("")
@@ -219,6 +243,7 @@ def to_markdown(c):
                   f"- **boundary:** {h['boundary']}",
                   f"- **assumption:** {h['assumption']}",
                   f"- **possible invariant:** {h['invariant']}",
+                  *([f"- **side:** {h['side']} ({h['trade']})"] if h.get("side") else []),
                   "- **suggested transformations:**"] + [f"  - {t}" for t in h["transformations"]] + [
                   f"- **because:** matched `{h['rule']}` in: `{h['evidence'][:160]}`", ""]
     L += ["## Original stderr", "", "```", c["stderr"].rstrip() or "(empty)", "```", "",
