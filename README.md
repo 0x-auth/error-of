@@ -7,8 +7,24 @@ Errors as observations. See `PRD.md` and `docs/architecture.md`.
 ./error-of report <id>           show a stored case
 ./error-of search <text>         search stored cases
 ./error-of patterns              recurring classes and signatures
+./error-of walk <e1> <e2> ...    diagnose a walk from its signed errors
 python3 -m unittest discover tests
 ```
+
+How error-of fits a larger loop (reconstruct, run, read the error, keep two edges,
+gate): `docs/construct.md`.
+
+## Side and walk
+
+Every case now carries a **side** when the error has a direction: `too big`
+(Memory, Storage: trade time for space), `too slow` (Time: trade space for time),
+`too coarse` (Precision). Programs can report their own with `"side"` and a signed
+`"error"` in the protocol line.
+
+`error_of/walk.py` keeps only the last two errors of a walk toward a target and
+reads one number from them, `k = (e_now + e_prev) / e_last`:
+|k| < 2 cycling, k = +2 drifting, k < -2 converging while bracketing, and so on.
+Cycles are called from three numbers, without a list of visited states.
 
 Knowledge base: `~/.error-of/cases.jsonl` (append-only; override with `ERROR_OF_HOME`).
 
