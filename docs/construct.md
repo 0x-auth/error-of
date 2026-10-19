@@ -85,6 +85,8 @@ This replaces cycle detection by a list of every visited state.
 | **walk diagnosis** from two remembered errors | `error_of/walk.py`, `error-of walk <e1> <e2> ...` |
 | gate | `heal.py`: a heal is accepted only if its invariant holds (already there) |
 | case store | `~/.error-of/cases.jsonl`, append-only (already there) |
+| the loop with a frozen proposer (X) | `examples/reconstruct/fib.py` |
+| programs generated from a seed (A, B, C) | `examples/organism/organism.py`, see `docs/organisms/` |
 
 Sides assigned by pattern:
 
@@ -130,6 +132,12 @@ tick   3  cycling      side=too high  k=-2.000  rate=1.000  bracketing
    path; spend compute only on errors.
 8. **Moves must chain.** If base moves are encoded, composing two must give another
    valid move: compose the operations, not their codes.
+
+The ideas behind items 2 and 8 are worked through at small scale in the organisms
+(`docs/organisms/`): A ranks its words by use and forgets the least used, and its
+moves compose as operations, not codes. The case store itself does not rank
+transformations yet. Open in the organisms: goals with a soft gate, and carrying
+learning across goals that are only similar.
 
 ## Where the ideas came from
 

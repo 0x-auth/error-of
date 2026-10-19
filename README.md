@@ -26,6 +26,22 @@ reads one number from them, `k = (e_now + e_prev) / e_last`:
 |k| < 2 cycling, k = +2 drifting, k < -2 converging while bracketing, and so on.
 Cycles are called from three numbers, without a list of visited states.
 
+## Organisms: programs generated, not written
+
+Four small, runnable cases, each with a one-page description in `docs/organisms/`:
+
+| | goal | starts with | learns | code |
+|---|---|---|---|---|
+| [X](docs/organisms/X.md) | answer a question | a frozen proposer | nothing; carries two sides | `examples/reconstruct/fib.py` |
+| [A](docs/organisms/A.md) | find a program from examples | four seed moves | words from successes, refutations from failures | `examples/organism/organism.py` |
+| [B](docs/organisms/B.md) | same as A | seed moves, in A's world | from A's refutations | same |
+| [C](docs/organisms/C.md) | same as A, plus an unseen goal | A's words | from A's successes | same |
+
+```
+python3 examples/reconstruct/fib.py                   # X, ~3 s
+./error-of run python3 examples/organism/organism.py  # A, B, C, recorded as observations
+```
+
 Knowledge base: `~/.error-of/cases.jsonl` (append-only; override with `ERROR_OF_HOME`).
 
 ## Observation protocol
