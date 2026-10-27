@@ -1,0 +1,118 @@
+<title>Construct and error-of</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one tall diagram you can scroll and zoom, then the reading notes below it. */
+:root{
+  --bg:#F3F4F2; --panel:#FFFFFF; --ink:#1B1F1D; --muted:#5E6661; --rule:#D7DCD8;
+  --judge-fill:#ECEAFB; --judge-line:#5B52B8; --judge-ink:#2F2880;
+  --err-fill:#DFF3EB; --err-line:#167A5C; --err-ink:#0B4A38;
+  --base-fill:#EEEDE8; --base-line:#7C7B74; --base-ink:#33332F;
+  --arrow:#6B706C;
+  --body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141716; --panel:#1C201E; --ink:#E6EAE7; --muted:#9AA39D; --rule:#2E3431;
+  --judge-fill:#2A2650; --judge-line:#A9A2F0; --judge-ink:#E1DEFC;
+  --err-fill:#123A2E; --err-line:#5CCBA4; --err-ink:#CFF2E4;
+  --base-fill:#2A2B28; --base-line:#A3A29A; --base-ink:#E6E5DF;
+  --arrow:#9AA39D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141716; --panel:#1C201E; --ink:#E6EAE7; --muted:#9AA39D; --rule:#2E3431;
+  --judge-fill:#2A2650; --judge-line:#A9A2F0; --judge-ink:#E1DEFC;
+  --err-fill:#123A2E; --err-line:#5CCBA4; --err-ink:#CFF2E4;
+  --base-fill:#2A2B28; --base-line:#A3A29A; --base-ink:#E6E5DF;
+  --arrow:#9AA39D; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1{font-size:26px;line-height:1.2;margin:0;font-weight:600;text-wrap:balance}
+h2{font-size:19px;margin:0;font-weight:600;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--muted)}
+.figure{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:12px;overflow-x:auto}
+.figure svg{display:block;width:100%;min-width:340px;height:auto}
+svg text{font-family:var(--body)}
+.t{font-size:15px;font-weight:600}
+.s{font-size:13px}
+.judge rect{fill:var(--judge-fill);stroke:var(--judge-line)} .judge .t{fill:var(--judge-ink)} .judge .s{fill:var(--judge-line)}
+.err rect{fill:var(--err-fill);stroke:var(--err-line)} .err .t{fill:var(--err-ink)} .err .s{fill:var(--err-line)}
+.base rect{fill:var(--base-fill);stroke:var(--base-line)} .base .t{fill:var(--base-ink)} .base .s{fill:var(--base-line)}
+.ar{stroke:var(--arrow);stroke-width:1.3;fill:none}
+.slow{stroke:var(--err-line);stroke-width:1.3;fill:none;stroke-dasharray:5 4}
+.lab{font-size:12px;fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:2px;border:1px solid}
+section{display:flex;flex-direction:column;gap:10px}
+ol,ul{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+code{font-family:var(--mono);font-size:14px}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Construct and error-of</h1>
+    <p class="muted">A cue goes in, a frozen model proposes, the fabric runs it, error-of reads what happened, and only the last two errors are carried into the next try.</p>
+  </header>
+
+  <div class="figure">
+    <svg viewBox="0 0 400 620" role="img" aria-labelledby="dt dd">
+      <title id="dt">The construct with error-of</title>
+      <desc id="dd">Cue to reconstructor to fabric to error-of. A failure becomes one of two remembered edges looping back to the reconstructor. A pass goes through the gate to the answer. A case store of past runs feeds the reconstructor slowly.</desc>
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+      <g class="base"><rect x="100" y="20" width="200" height="56" rx="8"/><text class="t" x="200" y="40" text-anchor="middle" dominant-baseline="central">Cue</text><text class="s" x="200" y="60" text-anchor="middle" dominant-baseline="central">problem statement</text></g>
+      <g class="judge"><rect x="100" y="110" width="200" height="56" rx="8"/><text class="t" x="200" y="130" text-anchor="middle" dominant-baseline="central">Reconstructor</text><text class="s" x="200" y="150" text-anchor="middle" dominant-baseline="central">frozen model proposes</text></g>
+      <g class="base"><rect x="100" y="200" width="200" height="56" rx="8"/><text class="t" x="200" y="220" text-anchor="middle" dominant-baseline="central">Fabric</text><text class="s" x="200" y="240" text-anchor="middle" dominant-baseline="central">interpreter, OS limits</text></g>
+      <g class="err"><rect x="100" y="290" width="200" height="56" rx="8"/><text class="t" x="200" y="310" text-anchor="middle" dominant-baseline="central">error-of</text><text class="s" x="200" y="330" text-anchor="middle" dominant-baseline="central">boundary, assumption</text></g>
+      <g class="err"><rect x="30" y="400" width="150" height="56" rx="8"/><text class="t" x="105" y="420" text-anchor="middle" dominant-baseline="central">Two edges</text><text class="s" x="105" y="440" text-anchor="middle" dominant-baseline="central">last two errors</text></g>
+      <g class="judge"><rect x="220" y="400" width="150" height="56" rx="8"/><text class="t" x="295" y="420" text-anchor="middle" dominant-baseline="central">Gate</text><text class="s" x="295" y="440" text-anchor="middle" dominant-baseline="central">invariant holds?</text></g>
+      <g class="base"><rect x="220" y="500" width="150" height="48" rx="8"/><text class="t" x="295" y="524" text-anchor="middle" dominant-baseline="central">Answer</text></g>
+      <g class="err"><rect x="30" y="500" width="150" height="56" rx="8" stroke-dasharray="4 3"/><text class="t" x="105" y="520" text-anchor="middle" dominant-baseline="central">Case store</text><text class="s" x="105" y="540" text-anchor="middle" dominant-baseline="central">many past runs</text></g>
+
+      <line class="ar" x1="200" y1="76" x2="200" y2="106" marker-end="url(#ah)"/>
+      <line class="ar" x1="200" y1="166" x2="200" y2="196" marker-end="url(#ah)"/>
+      <line class="ar" x1="200" y1="256" x2="200" y2="286" marker-end="url(#ah)"/>
+      <path class="ar" d="M170 346 V370 H105 V396" marker-end="url(#ah)"/>
+      <path class="ar" d="M230 346 V370 H295 V396" marker-end="url(#ah)"/>
+      <line class="ar" x1="295" y1="456" x2="295" y2="496" marker-end="url(#ah)"/>
+      <line class="ar" x1="220" y1="440" x2="184" y2="440" marker-end="url(#ah)"/>
+      <text class="lab" x="200" y="428" text-anchor="middle">fails</text>
+      <path class="ar" d="M30 420 H20 V146 H96" marker-end="url(#ah)"/>
+      <path class="slow" d="M30 528 H8 V126 H96" marker-end="url(#ah)"/>
+    </svg>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--judge-fill);border-color:var(--judge-line)"></i>judgment</span>
+      <span><i class="sw" style="background:var(--err-fill);border-color:var(--err-line)"></i>errors and memory</span>
+      <span><i class="sw" style="background:var(--base-fill);border-color:var(--base-line)"></i>given by the fabric</span>
+      <span>dashed line = slow path</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>How to read it</h2>
+    <p>The solid loop is one walk. Each failed try leaves only two things behind: the last two errors. They go back to the reconstructor, which proposes again, until the gate passes.</p>
+    <p>The dashed loop is slow. Every run lands in error-of's case store. Over many runs, those cases are the events that shape the reconstructor. This is memory as a model trained by many events.</p>
+  </section>
+
+  <section>
+    <h2>What error-of already gives</h2>
+    <ul>
+      <li>Capture under the fabric's limits, classified as boundary, assumption, invariant and transformation.</li>
+      <li>Memory and Time as error classes, with stream or chunk and cache or reduce as transformations. That is the space and time trade.</li>
+      <li>A heal is accepted only if its invariant holds. That is the gate.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Where it could go differently</h2>
+    <ol>
+      <li><strong>Errors carry the wall, not the side.</strong> Elimination needs a direction: too high or too low, too big or too slow. A <code>side</code> field on each case would feed the two edges directly.</li>
+      <li><strong>The rule table is written by a person.</strong> Good as a seed. Over time the outcomes in the case store should outrank the regex rules.</li>
+      <li><strong>The store records but does not learn yet.</strong> It does not rank which transformation worked for a signature. That ranking is the dashed arrow, and the smallest change with the biggest effect.</li>
+      <li><strong>Heal changes input, the loop changes programs.</strong> Keep error-of as observer and judge, and put the reconstructor outside it, instead of loosening that rule.</li>
+      <li><strong>The gate is the single point of failure.</strong> A wrong invariant steers every walk wrong. Two independent invariants that must agree would guard it.</li>
+    </ol>
+  </section>
+</div>

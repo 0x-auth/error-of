@@ -1,0 +1,194 @@
+<title>Mac and Internet Fabrics</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab ledger. Law on top, two fabrics side by side, then a live transfer test. */
+:root{
+  --bg:#F2F4F6; --panel:#FFFFFF; --ink:#16202A; --muted:#5B6672; --rule:#D5DBE1;
+  --mac:#2450C8; --mac-soft:#E4EBFB; --net:#B4690E; --net-soft:#FAEEDC;
+  --ok:#1E7A4C; --ok-soft:#E1F2E8; --bad:#B03A2E; --bad-soft:#F8E3E0;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11161C; --panel:#18202A; --ink:#E4E9EE; --muted:#97A3AF; --rule:#2B3540;
+  --mac:#7FA2F5; --mac-soft:#1C2A4A; --net:#E6A452; --net-soft:#3A2A14;
+  --ok:#6CCB97; --ok-soft:#173326; --bad:#F08A7E; --bad-soft:#3D1D19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161C; --panel:#18202A; --ink:#E4E9EE; --muted:#97A3AF; --rule:#2B3540;
+  --mac:#7FA2F5; --mac-soft:#1C2A4A; --net:#E6A452; --net-soft:#3A2A14;
+  --ok:#6CCB97; --ok-soft:#173326; --bad:#F08A7E; --bad-soft:#3D1D19; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:30px;line-height:1.15}
+h2{font-size:20px}
+p{margin:0;max-width:65ch}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.law{font-family:var(--mono);font-size:22px;padding:14px 18px;background:var(--panel);border:1px solid var(--rule);border-radius:6px;display:flex;flex-wrap:wrap;gap:6px 28px;align-items:baseline}
+.law small{font-size:13px;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:12px}
+.tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--rule);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--rule)}
+tr:last-child td{border-bottom:0}
+th{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child{font-weight:500;width:22%}
+th.mac{color:var(--mac)} th.net{color:var(--net)}
+td .q{font-family:var(--mono);font-size:13px}
+.sym{font-family:var(--mono);font-size:12px;color:var(--muted);display:block;font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.fab{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;border-top:4px solid var(--c);min-width:0}
+.fab.mac{--c:var(--mac);--s:var(--mac-soft)} .fab.net{--c:var(--net);--s:var(--net-soft)}
+.fab h3{margin:0;font-family:var(--display);font-size:18px;color:var(--c)}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,120px);gap:8px;align-items:center}
+.row label{font-family:var(--mono);font-size:15px}
+select,input{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:4px;padding:6px 8px;min-width:0;width:100%}
+input{font-family:var(--mono);text-align:right}
+select:focus-visible,input:focus-visible{outline:2px solid var(--c,var(--mac));outline-offset:1px}
+.cout{font-family:var(--mono);background:var(--s);border-radius:4px;padding:10px 12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cout b{font-weight:500;color:var(--c)}
+.units{font-size:12px;color:var(--muted)}
+.tests{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.test{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.test .line{font-family:var(--mono);font-size:13px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.pill{align-self:flex-start;font-family:var(--mono);font-size:12px;padding:3px 10px;border-radius:99px;letter-spacing:.04em}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)}
+.tol{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tol input{width:90px}
+ul{margin:0;padding-left:20px;max-width:70ch} li{margin:4px 0}
+code{font-family:var(--mono);font-size:13px}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <span class="eyebrow">Working ledger · Oct 2026</span>
+    <h1>Mac and internet as two fabrics</h1>
+    <p class="muted">Each fabric has a smallest cell of space, a smallest tick of time, and a smallest state change. Fix the law in one fabric, carry its constant across, and see whether the other fabric's change stays inside it.</p>
+  </header>
+
+  <div class="law">
+    <span>∆x · ∆t = ∆s · c</span>
+    <small>so &nbsp;c = ∆x · ∆t / ∆s</small>
+    <small>∆x cell (bits) · ∆t tick (s) · ∆s state change (bits)</small>
+  </div>
+
+  <section>
+    <h2>Side by side</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Quantity</th><th class="mac">Mac (Apple Silicon)</th><th class="net">Internet</th></tr></thead>
+      <tbody>
+        <tr><td>Address space<span class="sym">space dimension</span></td><td><span class="q">2⁶⁴</span> virtual, about 2⁴⁷ usable per process</td><td><span class="q">2³²</span> IPv4 · <span class="q">2¹²⁸</span> IPv6</td></tr>
+        <tr><td>Cell<span class="sym">∆x</span></td><td>1 byte addressable · 128 B cache line · 16 KB page</td><td>/32 host address · 20 B IPv4 header · 1500 B packet (MTU)</td></tr>
+        <tr><td>Tick<span class="sym">∆t</span></td><td>≈0.29 ns cycle at 3.5 GHz · 41.7 ns OS clock tick · ≈10 ms scheduler slice</td><td>≈233 ps NTP resolution · ≈1 ms per hop · ≈125 ms Pune–US East RTT floor</td></tr>
+        <tr><td>State change<span class="sym">∆s</span></td><td>1 bit flip · 64-bit register write · 128 B cache-line fill</td><td>TTL decrement (8-bit field) · one forwarding decision · whole packet moved</td></tr>
+        <tr><td>Walk cap<span class="sym">guard against cycles</span></td><td>PATH_MAX 1024 B · 32 symlinks</td><td>TTL ≤ 255 (often 64) · 20 HTTP redirects · DNS name ≤ 253 chars</td></tr>
+        <tr><td>Halting guard</td><td>None in general; the scheduler preempts each slice</td><td>TTL kills the packet at zero</td></tr>
+        <tr><td>Jumps<span class="sym">nonlocal moves</span></td><td>Any address in one tick; cost is latency (cache ≈1 ns, RAM ≈100 ns)</td><td>Any IP in one send; cost is hops and distance</td></tr>
+        <tr><td>Speed floor<span class="sym">c, physical</span></td><td>Light ≈9 cm per cycle; about the size of chip and memory</td><td>Light in fiber ≈200,000 km/s</td></tr>
+        <tr><td>Precision</td><td>double ε ≈ 2.2 × 10⁻¹⁶</td><td>No finer than one packet, one /32, one NTP fraction</td></tr>
+      </tbody>
+    </table></div>
+    <p class="units">Figures are typical values, not measurements from this machine or this connection.</p>
+  </section>
+
+  <section>
+    <h2>Set each fabric's quanta</h2>
+    <p class="muted">Pick a preset or type your own number. c updates live.</p>
+    <div class="grid">
+      <div class="fab mac" id="A">
+        <h3>Mac</h3>
+        <div class="row"><label for="A-x-p">∆x</label><select id="A-x-p"></select><input id="A-x" inputmode="decimal"></div>
+        <div class="row"><label for="A-t-p">∆t</label><select id="A-t-p"></select><input id="A-t" inputmode="decimal"></div>
+        <div class="row"><label for="A-s-p">∆s</label><select id="A-s-p"></select><input id="A-s" inputmode="decimal"></div>
+        <div class="cout"><span>c_mac</span><b id="A-c">–</b></div>
+      </div>
+      <div class="fab net" id="B">
+        <h3>Internet</h3>
+        <div class="row"><label for="B-x-p">∆x</label><select id="B-x-p"></select><input id="B-x" inputmode="decimal"></div>
+        <div class="row"><label for="B-t-p">∆t</label><select id="B-t-p"></select><input id="B-t" inputmode="decimal"></div>
+        <div class="row"><label for="B-s-p">∆s</label><select id="B-s-p"></select><input id="B-s" inputmode="decimal"></div>
+        <div class="cout"><span>c_net</span><b id="B-c">–</b></div>
+      </div>
+    </div>
+    <p class="units">Units: ∆x in bits, ∆t in seconds, ∆s in bits, so c is in bit·s per bit of state change. Inputs accept forms like <code>2.86e-10</code>.</p>
+  </section>
+
+  <section>
+    <h2>Transfer test</h2>
+    <div class="tol"><label for="tol">Tolerance factor</label><input id="tol" inputmode="decimal" value="10"><span class="units">a prediction passes if it lands within this factor of the actual ∆s</span></div>
+    <div class="tests">
+      <div class="test">
+        <span class="eyebrow">Mac law applied to internet</span>
+        <div class="line"><span>predicted ∆s_net = ∆x_net·∆t_net / c_mac</span></div>
+        <div class="line"><span>predicted</span><span id="AB-p">–</span></div>
+        <div class="line"><span>actual</span><span id="AB-a">–</span></div>
+        <div class="line"><span>ratio</span><span id="AB-r">–</span></div>
+        <span class="pill" id="AB-v">–</span>
+      </div>
+      <div class="test">
+        <span class="eyebrow">Internet law applied to Mac</span>
+        <div class="line"><span>predicted ∆s_mac = ∆x_mac·∆t_mac / c_net</span></div>
+        <div class="line"><span>predicted</span><span id="BA-p">–</span></div>
+        <div class="line"><span>actual</span><span id="BA-a">–</span></div>
+        <div class="line"><span>ratio</span><span id="BA-r">–</span></div>
+        <span class="pill" id="BA-v">–</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Open questions to test</h2>
+    <ul>
+      <li>Is there a choice of quanta where c_mac and c_net agree, and does that choice mean something physically?</li>
+      <li>Should c carry units of time, as here, or should ∆x be counted in cells so that c becomes cells per tick?</li>
+      <li>A CPU flips many bits per tick and a Turing machine flips one. Is c a parallelism constant?</li>
+      <li>Walk caps (32 symlinks, 20 redirects, TTL 255): do they follow from c, or are they independent choices?</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const P={
+ A:{x:[["1 bit",1],["1 byte",8],["Cache line 128 B",1024],["Page 16 KB",131072]],
+    t:[["Cycle 3.5 GHz",2.857e-10],["OS clock tick 41.7 ns",4.1667e-8],["Scheduler slice 10 ms",1e-2]],
+    s:[["1 bit flip",1],["64-bit register write",64],["Cache-line fill",1024]],
+    d:[1,0,1]},
+ B:{x:[["/32 address",32],["IPv4 header 20 B",160],["Packet 1500 B",12000]],
+    t:[["NTP resolution 233 ps",2.328e-10],["Per hop ≈1 ms",1e-3],["Pune–US RTT 125 ms",0.125]],
+    s:[["1 bit",1],["TTL decrement 8 bits",8],["Whole packet",12000]],
+    d:[2,1,1]}
+};
+const $=id=>document.getElementById(id);
+const fmt=v=>!isFinite(v)?"–":(v===0?"0":(Math.abs(v)>=1e4||Math.abs(v)<1e-2?v.toExponential(3):(+v.toFixed(4)).toString()));
+let saved={};try{saved=JSON.parse(localStorage.getItem("fabrics")||"{}")}catch(e){}
+["A","B"].forEach(F=>{["x","t","s"].forEach((k,i)=>{
+  const sel=$(`${F}-${k}-p`),inp=$(`${F}-${k}`);
+  P[F][k].forEach(([n,v],j)=>{const o=document.createElement("option");o.value=j;o.textContent=n;sel.appendChild(o)});
+  const c=document.createElement("option");c.value="c";c.textContent="Custom";sel.appendChild(c);
+  const key=`${F}${k}`;
+  if(saved[key]!=null){inp.value=saved[key];const m=P[F][k].findIndex(p=>p[1]==saved[key]);sel.value=m>=0?m:"c"}
+  else{sel.value=P[F].d[i];inp.value=P[F][k][P[F].d[i]][1]}
+  sel.addEventListener("change",()=>{if(sel.value!=="c")inp.value=P[F][k][sel.value][1];calc()});
+  inp.addEventListener("input",()=>{const m=P[F][k].findIndex(p=>p[1]==parseFloat(inp.value));sel.value=m>=0?m:"c";calc()});
+})});
+$("tol").addEventListener("input",calc);
+function g(F,k){return parseFloat($(`${F}-${k}`).value)}
+function verdict(id,pred,act,tol){
+  const r=pred/act;$(id+"-p").textContent=fmt(pred);$(id+"-a").textContent=fmt(act);$(id+"-r").textContent=fmt(r);
+  const el=$(id+"-v");
+  if(!isFinite(r)||r<=0){el.textContent="Check inputs";el.className="pill bad";return}
+  const ok=r<=tol&&r>=1/tol;el.textContent=ok?"Within the law":`Outside, off by ${fmt(Math.max(r,1/r))}×`;el.className="pill "+(ok?"ok":"bad");
+}
+function calc(){
+  const A={x:g("A","x"),t:g("A","t"),s:g("A","s")},B={x:g("B","x"),t:g("B","t"),s:g("B","s")};
+  const cA=A.x*A.t/A.s,cB=B.x*B.t/B.s;$("A-c").textContent=fmt(cA);$("B-c").textContent=fmt(cB);
+  const tol=Math.max(1,parseFloat($("tol").value)||10);
+  verdict("AB",B.x*B.t/cA,B.s,tol);verdict("BA",A.x*A.t/cB,A.s,tol);
+  try{localStorage.setItem("fabrics",JSON.stringify({Ax:A.x,At:A.t,As:A.s,Bx:B.x,Bt:B.t,Bs:B.s}))}catch(e){}
+}
+calc();
+</script>
