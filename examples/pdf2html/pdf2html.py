@@ -23,7 +23,14 @@ Invariants
 Graphics (vectors and images) come out as one SVG per page, chosen the same
 way; see the graphics section for G1-G3. --no-graphics skips them.
 
+Pages with no text layer (scans, photos saved as PDF) are OCR'd with
+tesseract; the OCR words go through the same invariants.
+
+Images and CSS are written to <output>_files/ so the HTML stays readable.
+--inline keeps everything in one file (base64).
+
 Requires: pdfminer.six (pure Python; `pip install pdfminer.six`).
+OCR: tesseract and pdftoppm (`pkg install tesseract poppler` on Termux).
 """
 import html
 import json
@@ -75,6 +82,44 @@ def words_of(path, all_texts=False):
             return sum(count(c) for c in o) if hasattr(o, "__iter__") else 0
         pages.append({"w": page.width, "h": H, "words": words, "chars": count(page)})
     return pages
+
+
+def ocr_pages(src, pages, which, dpi=300, min_conf=40):
+    """OCR as another source of words. Tesseract word boxes are mapped into the
+    page's own coordinates, so the same lines/cells/invariants apply unchanged.
+    Low-confidence words are observations, not silent drops."""
+    if not (_have("pdftoppm") and _have("tesseract")):
+        observe(**{"class": "Representation"}, boundary="ocr",
+                observation="pdftoppm or tesseract not found",
+                assumption="poppler and tesseract are installed",
+                transformation="install poppler and tesseract", outcome="ocr skipped")
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        for k in which:
+            base = f"{tmp}/o{k}"
+            subprocess.run(["pdftoppm", "-r", str(dpi), "-f", str(k + 1), "-l", str(k + 1),
+                            "-png", "-singlefile", src, base], check=True)
+            tsv = subprocess.run(["tesseract", base + ".png", "stdout", "--psm", "3", "tsv"],
+                                 capture_output=True, text=True).stdout
+            s = 72.0 / dpi
+            words, low = [], []
+            for row in tsv.splitlines()[1:]:
+                f = row.split("\t")
+                if len(f) < 12 or f[0] != "5" or not f[11].strip():
+                    continue
+                conf = float(f[10]); x, y, w, h = (int(v) for v in f[6:10])
+                wd = {"text": f[11], "x0": x * s, "x1": (x + w) * s, "top": y * s, "size": h * s * 1.25}
+                (words if conf >= min_conf else low).append((wd, conf))
+            if low:
+                observe(**{"class": "Precision"}, page=k + 1, boundary="ocr confidence",
+                        observation=f"{len(low)} word(s) under {min_conf}% confidence dropped, e.g. "
+                                    + ", ".join(repr(w["text"]) for w, _ in low[:6]),
+                        assumption="every mark on the page is text", transformation="none",
+                        outcome="reported")
+            pages[k]["words"] = [w for w, _ in words]
+            pages[k]["chars"] = sum(len(w["text"]) for w, _ in words)
+            mean = sum(c for _, c in words) / max(len(words), 1)
+            print(f"  ocr p{k + 1}: {len(words)} words, mean confidence {mean:.0f}%")
 
 
 def merge_words(words):
@@ -578,6 +623,40 @@ CSS = ("body{margin:0;padding:24px 16px;background:#f2f3f5;font:13px/1.45 Arial,
        "font-variant-numeric:tabular-nums;white-space:nowrap}.pg svg{display:block;width:100%;height:auto;margin:6px 0 14px}hr{border:0;border-top:2px dashed #d3d6dd;margin:22px 0}")
 
 
+EXT = {"image/png": "png", "image/jpeg": "jpg", "image/svg+xml": "svg", "image/gif": "gif", "image/webp": "webp"}
+
+
+def split_assets(page, dst):
+    """Keep the HTML readable: every base64 data URI becomes a file in <name>_files/
+    and the CSS becomes <name>_files/style.css. SVG stays inline (it is small once
+    its images are out), and its <image> tags point at the files by relative path.
+    --inline keeps the old single-file output."""
+    import base64, hashlib, os
+    stem = os.path.splitext(os.path.basename(dst))[0]
+    rel = stem + "_files"
+    adir = os.path.join(os.path.dirname(os.path.abspath(dst)), rel)
+    os.makedirs(adir, exist_ok=True)
+    n = [0]
+
+    def out(m):
+        attr, mime, data = m.group(1), m.group(2), m.group(3)
+        raw = base64.b64decode(data)
+        n[0] += 1
+        name = f"img{n[0]}-{hashlib.sha1(raw).hexdigest()[:8]}.{EXT.get(mime, 'bin')}"
+        with open(os.path.join(adir, name), "wb") as f:
+            f.write(raw)
+        return f'{attr}="{rel}/{name}"'
+
+    page = re.sub(r'((?:xlink:)?href|src)="data:([\w/+.-]+);base64,([A-Za-z0-9+/=\s]+)"', out, page)
+    m = re.search(r"<style>(.*?)</style>", page, re.S)
+    if m:
+        with open(os.path.join(adir, "style.css"), "w") as f:
+            f.write(m.group(1).replace("}", "}\n"))
+        page = page.replace(m.group(0), f'<link rel="stylesheet" href="{rel}/style.css">')
+    print(f"  assets: {n[0]} image(s) and style.css in {rel}/")
+    return page
+
+
 def render(pages_blocks, title, graphics=None):
     out = []
     for k, blocks in enumerate(pages_blocks):
@@ -613,8 +692,9 @@ REPRESENTATIONS = [
 def main():
     if len(sys.argv) < 2:
         print(__doc__); return 2
-    args = [a for a in sys.argv[1:] if a != "--no-graphics"]
+    args = [a for a in sys.argv[1:] if a not in ("--no-graphics", "--inline")]
     want_graphics = "--no-graphics" not in sys.argv
+    inline_assets = "--inline" in sys.argv
     sys.argv = [sys.argv[0]] + args
     src = sys.argv[1]
     dst = sys.argv[2] if len(sys.argv) > 2 else re.sub(r"\.pdf$", "", src, flags=re.I) + ".html"
@@ -639,12 +719,19 @@ def main():
                     observation=f"pages {left[:10]} still draw characters no word holds",
                     assumption="text inside figures groups into lines",
                     transformation="none yet", outcome="reported")
+    empty = [k for k, p in enumerate(pages) if not p["words"]]
+    if empty:
+        observe(**{"class": "Representation"}, boundary="text layer",
+                observation=f"{len(empty)} page(s) have no extractable text",
+                assumption="the PDF stores text, not only an image of text",
+                transformation="OCR the page images", outcome="ocr")
+        ocr_pages(src, pages, empty)
     nwords = sum(len(p["words"]) for p in pages)
     if nwords == 0:
         observe(**{"class": "Representation"}, boundary="text layer",
-                observation="the PDF has no extractable text",
-                assumption="the PDF stores text, not only an image of text",
-                transformation="OCR the page images first", outcome="stopped")
+                observation="no text even after OCR",
+                assumption="the page images contain readable text",
+                transformation="a model reading of the page image", outcome="stopped")
         return 3
 
     # I3 does not depend on representation: check the source once.
@@ -676,7 +763,8 @@ def main():
 
     best = min(attempts, key=lambda a: a[0])
     with open(dst, "w") as f:
-        f.write(render(best[2], src, graphics_layer(src, pages) if want_graphics else None))
+        page = render(best[2], src, graphics_layer(src, pages) if want_graphics else None)
+        f.write(page if inline_assets else split_assets(page, dst))
     tables = sum(1 for bl in best[2] for b in bl if b["t"] == "table")
     print(f"wrote {dst}: {nwords} words, {tables} tables, representation '{best[1]['name']}', "
           f"{best[0]} violation(s) remaining")
